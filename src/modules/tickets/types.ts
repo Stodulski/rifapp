@@ -1,16 +1,14 @@
 import { TicketStatus } from "@prisma/client"
 
-TicketStatus
 export type Ticket = {
   raffleId: string
-  number: Number
+  number: number
   status?: TicketStatus
-
-  buyerName?: String
-  buyerPhone?: String
-  buyerEmail?: String
-  paidAt?: Date
-  paymentRef?: Date
+  buyerName?: string
+  buyerPhone?: string
+  buyerEmail?: string
+  paidAt?: Date | string      
+  paymentRef?: Date | string 
 }
 
 export type Tickets = Ticket[]
