@@ -23,7 +23,7 @@ export const registerController = async (
     if (!userId) return res.status(500).json({ message: 'Server error.' })
 
     const { accessToken, csrfToken } = await sendSessionTokens(res, userId)
-
+    res.set('Cache-Control', 'no-store')  
     res
       .status(200)
       .json({ message: 'Register successfully.', accessToken, csrfToken })
@@ -45,7 +45,7 @@ export const loginController = async (
       return res.status(401).json({ message: 'User does not exists.' })
 
     const { accessToken, csrfToken } = await sendSessionTokens(res, userId)
-
+    res.set('Cache-Control', 'no-store')
     res
       .status(200)
       .json({ message: 'Logged in successfully.', accessToken, csrfToken })
@@ -65,13 +65,10 @@ export const checkRefreshController = async (
     const refreshTokenData = await verifyRefreshTokenService(token)
     const userId = refreshTokenData.userId
     const oldRefrehJti = refreshTokenData.jti
-    const { accessToken, csrfToken } = await sendSessionTokens(
-      res,
-      userId
-    )
+    const { accessToken, csrfToken } = await sendSessionTokens(res, userId)
 
     await revokeRefreshTokenService(token, oldRefrehJti)
-
+    res.set('Cache-Control', 'no-store')
     res
       .status(200)
       .json({ message: 'Logged in successfully.', accessToken, csrfToken })

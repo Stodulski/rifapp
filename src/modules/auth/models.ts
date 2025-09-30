@@ -11,9 +11,6 @@ export const createRefreshTokenModel = async (refrehToken: NewRefreshToken) => {
         tokenHash: refrehToken.tokenHash,
         ip: refrehToken.ip ?? null,
         agent: refrehToken.agent ?? null
-      },
-      select: {
-        csrfToken: true
       }
     })
     return refreshToken
