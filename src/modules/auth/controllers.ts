@@ -1,18 +1,15 @@
 import type { UserLoginType, UserType } from '../user/types.js'
-import { generateAccessToken } from './helpers/jwt.js'
-import { searchAndVerifyUserService, createUserService } from './services.js'
+
+import {
+  VerifyUserFormService,
+  createUserService,
+  verifyRefreshTokenService,
+  revokeRefreshTokenService
+} from './services.js'
+
 import type { Request, Response, NextFunction } from 'express'
 
-const SendTokens = (req: Request, res: Response, userId: string) => {
-  const accessToken = generateAccessToken(userId)
-  res.cookie('access_token', accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
-    maxAge: 86400000 // 24 hours
-  })
-  return accessToken
-}
+import sendSessionTokens from './helpers/sendSessionTokens.js'
 
 export const registerController = async (
   req: Request,
@@ -22,9 +19,14 @@ export const registerController = async (
   try {
     const userData: UserType = req.body
     const user = await createUserService(userData)
-    if (!user) res.status(500).json({ message: 'Server error.' })
-    const accessToken = SendTokens(req, res, user.id)
-    res.status(200).json({ message: 'Register successfully.', accessToken })
+    const userId = user.id
+    if (!userId) return res.status(500).json({ message: 'Server error.' })
+
+    const { accessToken, csrfToken } = await sendSessionTokens(res, userId)
+
+    res
+      .status(200)
+      .json({ message: 'Register successfully.', accessToken, csrfToken })
   } catch (error) {
     next(error)
   }
@@ -37,13 +39,59 @@ export const loginController = async (
 ) => {
   try {
     const userData: UserLoginType = req.body
-    const user = await searchAndVerifyUserService(userData)
+    const user = await VerifyUserFormService(userData)
     const userId = user.id
-    if (userId === undefined) {
+    if (!userId)
       return res.status(401).json({ message: 'User does not exists.' })
-    }
-    const accessToken = SendTokens(req, res, userId)
-    res.status(200).json({ message: 'Logged in successfully.', accessToken })
+
+    const { accessToken, csrfToken } = await sendSessionTokens(res, userId)
+
+    res
+      .status(200)
+      .json({ message: 'Logged in successfully.', accessToken, csrfToken })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const checkRefreshController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token = req.cookies['refresh_token']
+    if (!token) return res.status(401).json({ message: 'Unauthorized.' })
+    const refreshTokenData = await verifyRefreshTokenService(token)
+    const userId = refreshTokenData.userId
+    const oldRefrehJti = refreshTokenData.jti
+    const { accessToken, csrfToken, newRefreshJti } = await sendSessionTokens(
+      res,
+      userId
+    )
+
+    await revokeRefreshTokenService(token, oldRefrehJti)
+
+    res
+      .status(200)
+      .json({ message: 'Logged in successfully.', accessToken, csrfToken })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const logoutController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token = req.cookies['refresh_token']
+    if (!token) return res.status(401).json({ message: 'Unauthorized.' })
+    await revokeRefreshTokenService(token)
+    res.status(200).json({
+      message: 'Logout successfully.'
+    })
   } catch (error) {
     next(error)
   }
