@@ -24,5 +24,4 @@ export type SessionTokens = {
   accessToken: string
   csrfToken: string
   refreshToken: string
-  newRefreshJti: string
 }

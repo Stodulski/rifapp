@@ -81,7 +81,6 @@ export const createSessionTokens = async (
       csrfToken,
       accessToken,
       refreshToken,
-      newRefreshJti: jti
     }
   } catch (error: any) {
     throw new ApiError(error.status || 500, error.message || 'Server error.')

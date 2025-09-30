@@ -65,7 +65,7 @@ export const checkRefreshController = async (
     const refreshTokenData = await verifyRefreshTokenService(token)
     const userId = refreshTokenData.userId
     const oldRefrehJti = refreshTokenData.jti
-    const { accessToken, csrfToken, newRefreshJti } = await sendSessionTokens(
+    const { accessToken, csrfToken } = await sendSessionTokens(
       res,
       userId
     )
