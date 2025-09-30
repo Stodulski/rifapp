@@ -30,7 +30,7 @@ export const searchRaffle = async (raffleId: string) => {
         ownerId: true,
         prize: true,
         quantity: true,
-        Ticket: {
+        Tickets: {
           select: {
             id: true,
             number: true,

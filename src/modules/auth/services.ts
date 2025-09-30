@@ -67,7 +67,7 @@ export const createSessionTokens = async (
     const refreshToken = generateRefreshToken(userId, jti)
     const refreshTokenHash = encryptRefreshToken(refreshToken)
 
-    const refreshTokenDB = await createRefreshTokenModel({
+    await createRefreshTokenModel({
       jti,
       userId,
       tokenHash: refreshTokenHash,
@@ -75,14 +75,15 @@ export const createSessionTokens = async (
       agent
     })
 
-    const csrfToken = refreshTokenDB.csrfToken
+    const csrfToken = crypto.randomUUID()
 
     return {
-      csrfToken,
       accessToken,
-      refreshToken,
+      csrfToken,
+      refreshToken
     }
   } catch (error: any) {
+    console.log(error)
     throw new ApiError(error.status || 500, error.message || 'Server error.')
   }
 }

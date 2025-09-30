@@ -3,7 +3,6 @@ import { verifyAccessToken } from '../helpers/jwt.js'
 import type { AccessTokenPayload } from '../types.js'
 
 const verifyCsrf = (req: Request, res: Response, next: NextFunction) => {
-  
   const cookieCsrf = req.cookies['csrf_token'] || ''
   const headerCsrf = req.get('X-CSRF-token') || ''
   if (!headerCsrf || !cookieCsrf || cookieCsrf !== headerCsrf) {
@@ -12,7 +11,7 @@ const verifyCsrf = (req: Request, res: Response, next: NextFunction) => {
   next()
 }
 
-const refreshRequired = (req: Request, res: Response, next: NextFunction)=>{
+const refreshRequired = (req: Request, res: Response, next: NextFunction) => {
   const refreshtoken = req.cookies['refresh_token']
   if (!refreshtoken) {
     return res.status(401).json({ message: 'Unauthorized.' })
@@ -31,9 +30,10 @@ const verifySession = (req: Request, res: Response, next: NextFunction) => {
   }
   try {
     const decoded = verifyAccessToken(token) as AccessTokenPayload
-    req.user.id = decoded.userId
+    req.user = { id: decoded.userId }
     next()
   } catch (error) {
+    console.log(error)
     return res.status(403).json({ message: 'Unauthorized' })
   }
 }
