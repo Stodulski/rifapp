@@ -11,3 +11,4 @@ export const createTickets = async (tickets: Tickets) => {
     throw new ApiError(error.status || 500, error.message || 'Server error.')
   }
 }
+

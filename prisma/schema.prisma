@@ -44,7 +44,7 @@ model Ticket {
   buyerName  String?
   buyerPhone String?
   buyerEmail String?
-
+  idempotencyKey String?
   paidAt     DateTime?
   paymentRef DateTime?
 
