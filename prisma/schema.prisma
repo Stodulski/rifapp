@@ -8,59 +8,56 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  lastname  String
-  birthdate DateTime
-  phone     String
-  email     String   @unique
-  password  String
-
-  Raffles       Raffle[]
-  Tickets       Ticket[]
-  RefreshTokens RefreshToken[]
+  id                     String         @id @default(uuid())
+  name                   String
+  lastname               String
+  birthdate              DateTime
+  phone                  String
+  email                  String         @unique
+  password               String
+  mercadopagoAccessToken String?
+  mercadopagoPublicKey   String?
+  mercadopagoUserId      String?        @unique
+  commissionPercentage   Float          @default(3.0)
+  Raffles                Raffle[]
+  RefreshTokens          RefreshToken[]
+  Tickets                Ticket[]
 }
 
 model Raffle {
-  id        String   @id @default(uuid())
-  name      String
-  price     Int
-  quantity  Int
-  prize     String?
-  ownerId   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Tickets   Ticket[]
-  user      User?    @relation(fields: [userId], references: [id])
-  userId    String?
+  id             String       @id @default(uuid())
+  name           String
+  price          BigInt
+  quantity       Int
+  prize          String?
+  status         RaffleStatus @default(PENDING)
+  winnerEmail    String?
+  ticketWinnerId String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  Tickets        Ticket[]
 }
 
 model Ticket {
-  id         String       @id @default(uuid())
-  raffleId   String
-  number     Int
-  status     TicketStatus @default(AVAILABLE)
-  userId     String?
-  buyerName  String?
-  buyerPhone String?
-  buyerEmail String?
-  idempotencyKey String?
-  paidAt     DateTime?
-  paymentRef DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  Raffle Raffle @relation(fields: [raffleId], references: [id])
-  User   User?  @relation(fields: [userId], references: [id])
+  id            String       @id @default(uuid())
+  raffleId      String       @unique
+  number        Int
+  status        TicketStatus @default(AVAILABLE)
+  userId        String?
+  buyerName     String?
+  buyerPhone    String?
+  buyerEmail    String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  Raffle        Raffle       @relation(fields: [raffleId], references: [id])
+  User          User?        @relation(fields: [userId], references: [id])
+  transactionId String?
+  Transaction   Transaction? @relation(fields: [transactionId], references: [id])
 
   @@unique([raffleId, number])
   @@index([raffleId, status])
-}
-
-enum TicketStatus {
-  AVAILABLE
-  PAID
 }
 
 model RefreshToken {
@@ -71,8 +68,45 @@ model RefreshToken {
   agent            String?
   remplacedByToken String?
   revokedAt        DateTime?
-  expiresAt        DateTime  @default(dbgenerated("now() + interval '7 day'"))
+  expiresAt        DateTime  @default(dbgenerated("(now() + '7 days'::interval)"))
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   user             User      @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id                 String            @id @default(uuid())
+  amount             BigInt
+  paymentRef         String?           @unique
+  merchantOrderId    String?           @unique
+  preferenceId       String?           @unique
+  paidAt             DateTime?
+  idempotencyKey     String            @unique
+  createdAt          DateTime          @default(now())
+  status             TransactionStatus
+  updateAt           DateTime          @updatedAt
+  sellerAmount       BigInt?
+  platformCommission BigInt?
+  applicationFee     BigInt?
+  sellerId           String?
+  Tickets            Ticket[]
+}
+
+enum RaffleStatus {
+  PENDING
+  FINISHED
+  CANCELED
+}
+
+enum TicketStatus {
+  AVAILABLE
+  RESERVED
+  PAID
+}
+
+enum TransactionStatus {
+  FAILED
+  PAID
+  REVERTED
+  PENDING
 }

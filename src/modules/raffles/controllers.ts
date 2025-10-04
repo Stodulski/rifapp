@@ -10,7 +10,9 @@ export const createRaffleController = async (
 ) => {
   try {
     const { name, price, quantity, prize } = req.body as Raffle
-    const raffle = await generateRaffle({ name, price, quantity, prize })
+    const userId = req.user?.id
+    if (!userId) throw new ApiError(401, 'Unauthorized.')
+    const raffle = await generateRaffle({ name, price, quantity, prize, userId })
     res
       .status(201)
       .json({ message: 'Raffle created successfully.', raffle: raffle.id })

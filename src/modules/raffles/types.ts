@@ -1,7 +1,7 @@
 export type Raffle = {
   name: string
-  price: number
+  price: bigint
   quantity: number
   prize: string
-  ownerId?: string | null
+  userId: string
 }
